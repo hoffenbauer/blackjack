@@ -10,8 +10,8 @@ ranks = ('Two', 'Three', 'Four', 'Five', 'Six', 'Seven',
          'Eight', 'Nine','Ten', 'Jack', 'Queen', 'King', 'Ace')
 values = {'Two':2, 'Three':3, 'Four':4, 'Five':5, 'Six':6, 'Seven':7,
           'Eight':8, 'Nine':9, 'Ten':10, 'Jack':10,
-          'Queen':10, 'King':10, 'Ace':[1,11]}
-all_cards = product(suits,ranks)
+          'Queen':10, 'King':10, 'Ace':11}
+all_cards = list(product(suits,ranks))
 
 class Card:
     """
@@ -52,134 +52,159 @@ class Player:
         self.cards = []
         self.score = 0
         self.balance = 0
+        self.bet = 0
 
     def get_card(self):
         """
         Adds the last card from the deck to the player. The value of the
-        card is added to the player score used to evaluate the winner.
+        card is added to the player score.
         """
         self.score += deck.cards[-1].value
         self.cards.append(deck.cards.pop(-1))
         
     def place_bet(self):
         """
-        Places the bet using the player's money. 
+        Asks the player to place a bet. The ammount cannot be higher than
+        the curent balance of the player.
         """
+        while True:
+            try: 
+                self.bet = int(input('Place your bet: '))
+                if self.bet <= self.balance:
+                    break
+                else:
+                    clear_output()
+                    print (f'Your bet cannot exceed your balance (${self.balance}).')
+            except:
+                clear_output()
+                print('Choose a valid number.')
         self.balance -= self.bet
         
-    def win(self):
-        """
-        Adds the total of the jackpot to player's balance.
-        """
-        self.balance += jackpot
-
-
-gambler = Player('gambler')
-dealer = Player('dealer')
-
-deck = Deck()
-deck.shuffle()
-
-def show_table():
+def initial_deal():
     """
-    Shows the cards drawn by the players.
+    Deals two cards for both the gambler and the dealer.
+    Both cards of the gambler are revealed, but only the 
+    top one of the dealer.
     """
-    print('GAMBLER')
-    for card in gambler.cards:      
-        print(card)
-    print(gambler.score)
-
-    print('\nDEALER')
-    for card in dealer.cards[1:]:
-        print(card)
-    print(dealer.score)
-
-def hit_stand():
-    jackpot = 0
-    playing = True
-    stance = ''
-    
-    gambler.balance = int(input('How much money do you have to play? '))
-    dealer.balance = gambler.balance * 10
-    gambler.bet = int(input('Place your bet: '))
-    dealer.bet = gambler.bet
-    gambler.place_bet()
-    dealer.place_bet()
-    
-    jackpot += (gambler.bet+dealer.bet)
-    
+    clear_output()
     while len(gambler.cards) < 2:
         gambler.get_card()
         dealer.get_card()
     while len(dealer.cards) < 2:
         gambler.get_card()
         dealer.get_card()
+    show_table()
+    
+def show_table():
+    """
+    Shows the cards drawn by both the dealer and the player. The
+    first card drawn by the dealer remains hidden.
+    """
+    print('DEALER')
+    for card in dealer.cards[1:]:
+        print(card)
+        
     print('\nGAMBLER')
     for card in gambler.cards:      
         print(card)
-
-    print('\nDEALER')
-    for card in dealer.cards[1:]:
+    print(gambler.score)
+                
+def show_table_end():
+    """
+    Shows the cards drawn by both the dealer and the player. The
+    first card drawn by the dealer is shown. The score of both is
+    also shown.
+    """
+    print('DEALER')
+    for card in dealer.cards:
         print(card)
+    print(dealer.score)
+    
+    print('\nGAMBLER')
+    for card in gambler.cards:      
+        print(card)
+    print(gambler.score)
+    
+def hit_stand():
+    """
+    Asks the gambler if he wishes to take another card
+    (hit) or not (stand). If hits, he receives another 
+    card. If he stands, no more cards are dealt for him
+    and the dealer must draw cards until he reachs a 
+    value of 17 or above. 
+    """
+    stance = ''
+    while stance not in ('h', 's'):
+        stance = input("Hit or stand? (H/S) ").lower()
+        if stance == 's':
+            clear_output()
+            while dealer.score <= 17:
+                dealer.get_card()
+            show_table_end()
+            return stance
+        else:
+            stance = ''
+            clear_output()
+            gambler.get_card()
+            show_table()    
 
-    while playing:
-        while stance not in ('H','S', 'h', 's'):
-            
-            stance = input("Hit or stand? (H/S) ").lower()
-            if stance == 's':
-                playing = False
-                clear_output()
-                while dealer.score <= 17:
-                    dealer.get_card()
-                    
-                print('\nGAMBLER')
-                for card in gambler.cards:      
-                    print(card)
-                print(gambler.score)
-                
-                print('\nDEALER')
-                for card in dealer.cards:
-                    print(card)
-                print(dealer.score)
-                    
-                if dealer.score > gambler.score:
-                    if dealer.score <= 21:
-                        print('\nThe house wins!')
-                        dealer.win()
-                    else:
-                        print('\nYou win!')
-                        gambler.win()
-                elif dealer.score < gambler.score:
-                    if gambler.score <= 21:
-                        print('\nYou win!')
-                        gambler.win()
-                    else:
-                        print('\nBust! The house wins!')
-                        dealer.win()
-                else:
-                    print('\nPush!')
-                break
-                
-
-            else:
-                clear_output()
-                gambler.get_card()
-                
-                print('\nGAMBLER')
-                for card in gambler.cards:      
-                    print(card)
-
-                print('\nDEALER')
-                for card in dealer.cards[1:]:
-                    print(card)
-                      
-                if gambler.score > 21:
-                    print('\nBust! You lose!')
-                    playing = False
-                    break
-                stance = ''
-    print('Here!')           
-    jackpot = 0
-                
-
-
+def result():
+    """
+    Compares the score of the gambler and the dealer for 
+    a winner or a tie (push). If the gambler gets 21 at
+    the initial draw, he has a blackjack. If the player
+    exceeds 21, it's a bust.
+    """
+    if gambler.score == dealer.score:
+        result = 'push'
+    elif gambler.score == 21:
+        result = 'blackjack'
+        gambler.balance += (gambler.bet+dealer.bet)
+    elif gambler.score > 21:
+        result = 'gambler_busts'
+    elif dealer.score > 21:
+        result = 'dealer_busts'
+        gambler.balance += (gambler.bet+dealer.bet)
+    elif gambler.score > dealer.score:
+        result = 'gambler_wins'
+        gambler.balance += (gambler.bet+dealer.bet)
+    elif gambler.score < dealer.score:
+        result = 'dealer_wins'
+    return result
+    
+def winner():
+    """
+    Adds the respective ammount of money to players' 
+    balance based on the result of the round.
+    """
+    if result() == 'push':
+        gambler.balance += gambler.bet
+        dealer.balance += dealer.bet
+        
+    elif result() in ('blackjack', 'gambler_wins', 'dealer_busts'):
+        gambler.balance += (gambler.bet+dealer.bet)
+        
+    elif result() in ('gambler_busts', 'dealer_wins'):
+        dealer.balance += (gambler.bet+dealer.bet)
+        
+def ace_value():
+    """
+    Adjusts the value of ace. Aces are normally valued at 11. If the 
+    player score exceeds 21, it's reduced by 10 to 1 to avoid bust.
+    This can only occur for one ace in the player
+    """
+    if gambler.score > 21:
+        if 'Ace' in [card.rank for card in gambler.cards]:
+            gambler.score -= 10
+    if dealer.score > 21:
+        if 'Ace' in [card.rank for card in dealer.cards]:
+            dealer.score -= 10
+        
+def replay():
+    """
+    Clears the scores and the hands of the players.
+    """
+    gambler.cards = []
+    dealer.cards = []
+    gambler.score = 0
+    dealer.score = 0
