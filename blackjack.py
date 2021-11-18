@@ -75,7 +75,7 @@ class Player:
                 self.bet = int(input('Place your bet: '))
                 if self.bet <= self.balance:
                     break
-
+                #else
                 clear_output()
                 print (f'Your bet cannot exceed your balance (${self.balance}).')
             except ValueError:
@@ -140,16 +140,17 @@ def hit_stand():
     while stance not in ('h', 's'):
         stance = input("Hit or stand? (H/S) ").lower()
         if stance == 'h':
-            stance = ''
             clear_output()
             gambler.get_card()
             show_table()
+            if gambler.score > 21:
+                return 'h'
+            stance = ''
         elif stance == 's':
             clear_output()
             while dealer.score <= 17:
                 dealer.get_card()
-            show_table_end()
-            return stance
+    return stance
 
 def result():
     """
@@ -180,21 +181,25 @@ def winner():
     Adds the respective ammount of money to players'
     balance based on the result of the round.
     """
+    result()
     if result() == 'push':
         gambler.balance += gambler.bet
         dealer.balance += dealer.bet
+        print("\nIt's a tie! Nobody wins and the bets are returned.")
 
     elif result() in ('blackjack', 'gambler_wins', 'dealer_busts'):
         gambler.balance += (gambler.bet+dealer.bet)
+        print(f'\nThe gambler gets ${gambler.bet+dealer.bet}.')
 
     elif result() in ('gambler_busts', 'dealer_wins'):
         dealer.balance += (gambler.bet+dealer.bet)
+        print(f'\nThe dealer gets ${gambler.bet+dealer.bet}.')
 
 def ace_value():
     """
     Adjusts the value of ace. Aces are normally valued at 11. If the
     player score exceeds 21, it's reduced by 10 to 1 to avoid bust.
-    This can only occur for one ace in the player
+    This can only occur for one ace in the player's cards.
     """
     if gambler.score > 21:
         if 'Ace' in [card.rank for card in gambler.cards]:
@@ -211,3 +216,54 @@ def replay():
     dealer.cards = []
     gambler.score = 0
     dealer.score = 0
+
+while True:
+    gambler = Player('gambler')
+    dealer = Player('dealer')
+
+    gambler.balance = 10000
+    dealer.balance = gambler.balance * 5
+
+    print("Welcome to the fabulous Las Venturas!\n")
+    print("Today, you'll be playing blackjack at the wonderful GMG Grand Las Venturas!")
+    print(f"You have ${gambler.balance} to play today!")
+
+    playing = True
+
+    while playing is True:
+        deck = Deck()
+        deck.shuffle()
+        gambler.place_bet()
+        dealer.bet = gambler.bet
+        dealer.balance -= dealer.bet
+        initial_deal()
+        ace_value()
+        if result() == 'blackjack':
+            winner()
+            playing = False
+        while True:
+            if hit_stand() == 's':
+                ace_value()
+                playing = False
+                break
+            ace_value()
+            playing = False
+            break
+
+        clear_output()
+        show_table_end()
+        winner()
+
+        if gambler.balance == 0:
+            print('Too bad! You ran out of money!')
+            break
+        play_again = ''
+        while play_again not in ('y', 'n'):
+            play_again = input('Play again? (y/n) ').lower()
+            clear_output()
+        if play_again == 'y':
+            replay()
+            playing = True
+        else:
+            print(f'Your final balance is ${gambler.balance}')
+    break
