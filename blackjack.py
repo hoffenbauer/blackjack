@@ -103,13 +103,9 @@ def show_table():
     Shows the cards drawn by both the dealer and the player. The
     first card drawn by the dealer remains hidden.
     """
-    print('DEALER')
-    for card in dealer.cards[1:]:
-        print(card)
+    print('DEALER', dealer.cards[1], sep='\n')
 
-    print('\nGAMBLER')
-    for card in gambler.cards:
-        print(card)
+    print('\nGAMBLER', *gambler.cards, sep='\n')
     print(gambler.score)
 
 def show_table_end():
@@ -118,14 +114,10 @@ def show_table_end():
     first card drawn by the dealer is shown. The score of both is
     also shown.
     """
-    print('DEALER')
-    for card in dealer.cards:
-        print(card)
+    print('DEALER', *dealer.cards, sep='\n')
     print(dealer.score)
 
-    print('\nGAMBLER')
-    for card in gambler.cards:
-        print(card)
+    print('\nGAMBLER', *gambler.cards, sep='\n')
     print(gambler.score)
 
 def hit_stand():
@@ -194,7 +186,8 @@ def winner():
     elif result() in ('gambler_busts', 'dealer_wins'):
         dealer.balance += (gambler.bet+dealer.bet)
         print(f'\nThe dealer gets ${gambler.bet+dealer.bet}.')
-
+    gambler.bet = 0
+    dealer.bet = 0
 def ace_value():
     """
     Adjusts the value of ace. Aces are normally valued at 11. If the
@@ -224,8 +217,6 @@ while True:
     gambler.balance = 10000
     dealer.balance = gambler.balance * 5
 
-    print("Welcome to the fabulous Las Venturas!\n")
-    print("Today, you'll be playing blackjack at the wonderful GMG Grand Las Venturas!")
     print(f"You have ${gambler.balance} to play today!")
 
     playing = True
